@@ -1,30 +1,64 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <h1>Projects</h1>
+  <div class="row justify-content-center">
+    <project-card v-for="project in projects" :key="project.id" :project="project" class="my-3 mx-3" />
+    <div class="pages row justify-content-center">
+      <div v-for="(page, index) in pages" :key="index" v-html="page.label" class="col mx-2 py-3 text-white rounded fs-4"
+        :class="{
+          'bg-primary': !page.active,
+          'bg-secondary': page.active,
+
+          'd-none': page.url === null
+        }" @click="toPage(page.url)">
+      </div>
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script>
+import ProjectCard from './components/ProjectCard.vue'
+
+import axios from 'axios';
+
+const API = "http://localhost:8000/api/v1"
+
+export default {
+  name: 'App',
+  components: {
+
+    ProjectCard
+  },
+  data() {
+    return {
+      projects: [],
+      pages: []
+    }
+  },
+  methods: {
+
+    toPage(url) {
+      axios.get(url)
+        .then(res => {
+
+          const data = res.data.projects;
+
+          this.projects = data.data;
+          this.pages = data.links;
+        })
+        .catch(err => console.error(err));
+    }
+  },
+  mounted() {
+    axios.get(API + '/projects-page')
+      .then(res => {
+
+        // this.projects = res.data.projects;
+        const data = res.data.projects;
+
+        this.projects = data.data;
+        this.pages = data.links;
+      })
+      .catch(err => console.error(err));
+  }
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+</script>
